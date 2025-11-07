@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basit Sohbet</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="login-screen">
+    <h2>Kullanıcı Adı Gir</h2>
+    <input id="username" placeholder="Kullanıcı adın" />
+    <button onclick="login()">Giriş Yap</button>
+  </div>
+
+  <div id="chat-screen" style="display:none;">
+    <h2>Canlı Sohbet</h2>
+    <div id="messages"></div>
+    <input id="messageInput" placeholder="Mesaj yaz..." />
+    <button onclick="sendMessage()">Gönder</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
