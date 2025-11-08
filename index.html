@@ -16,17 +16,12 @@
   <div id="chat-screen" style="display:none;">
     <h2>Canlı Sohbet</h2>
     <div id="messages"></div>
-
-    <div style="margin-top:10px;">
-      <input id="messageInput" type="text" placeholder="Mesaj yaz..." />
-      <input id="imageInput" type="file" accept="image/*" />
-      <button onclick="sendMessage()">Gönder</button>
-    </div>
+    <input id="messageInput" placeholder="Mesaj yaz..." />
+    <button onclick="sendMessage()">Gönder</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
