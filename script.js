@@ -9,68 +9,131 @@ const firebaseConfig = {
   appId: "1:72389173543:web:4270a610b27cedbc844902"
 };
 
-// Firebase'i başlat
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let username = "";
+let currentGroup = "";
 
+// --- GİRİŞ / KAYIT ---
 function login() {
-  username = document.getElementById("username").value.trim();
-  if (!username) return alert("Kullanıcı adı gir!");
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("chat-screen").style.display = "block";
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if (!user || !pass) return alert("Tüm alanları doldur!");
+
+  db.ref("users/" + user).once("value", (snap) => {
+    if (snap.exists()) {
+      const data = snap.val();
+      if (data.password === pass) {
+        username = user;
+        showGroupScreen();
+      } else {
+        alert("Yanlış şifre!");
+      }
+    } else {
+      alert("Böyle bir kullanıcı yok!");
+    }
+  });
 }
 
+function register() {
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if (!user || !pass) return alert("Tüm alanları doldur!");
+
+  db.ref("users/" + user).once("value", (snap) => {
+    if (snap.exists()) {
+      alert("Bu kullanıcı zaten var!");
+    } else {
+      db.ref("users/" + user).set({ password: pass });
+      alert("Kayıt başarılı! Giriş yapabilirsin.");
+    }
+  });
+}
+
+function logout() {
+  username = "";
+  document.getElementById("login-screen").style.display = "block";
+  document.getElementById("group-screen").style.display = "none";
+  document.getElementById("chat-screen").style.display = "none";
+}
+
+// --- GRUPLAR ---
+function showGroupScreen() {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("group-screen").style.display = "block";
+  loadGroups();
+}
+
+function loadGroups() {
+  const listDiv = document.getElementById("group-list");
+  listDiv.innerHTML = "";
+  db.ref("groups").once("value", (snap) => {
+    snap.forEach((child) => {
+      const groupName = child.key;
+      const btn = document.createElement("button");
+      btn.textContent = groupName;
+      btn.onclick = () => enterGroup(groupName);
+      listDiv.appendChild(btn);
+    });
+  });
+}
+
+function createGroup() {
+  const name = document.getElementById("newGroupName").value.trim();
+  if (!name) return alert("Grup adı gir!");
+  db.ref("groups/" + name).set({
+    members: { [username]: true },
+  });
+  document.getElementById("newGroupName").value = "";
+  loadGroups();
+}
+
+function enterGroup(groupName) {
+  currentGroup = groupName;
+  document.getElementById("group-title").textContent = "Grup: " + groupName;
+  document.getElementById("group-screen").style.display = "none";
+  document.getElementById("chat-screen").style.display = "block";
+  loadMessages();
+}
+
+function backToGroups() {
+  document.getElementById("chat-screen").style.display = "none";
+  document.getElementById("group-screen").style.display = "block";
+  db.ref("groups/" + currentGroup + "/messages").off(); // dinlemeyi kapat
+}
+
+// --- MESAJLAR ---
 function sendMessage() {
   const msg = document.getElementById("messageInput").value.trim();
   if (msg === "") return;
-
-  // Eğer Eymen "clear" yazdıysa, tüm mesajları sil
-  if (username.toLowerCase() === "eymen" && msg.toLowerCase() === "clear") {
-    db.ref("messages").remove();
-    document.getElementById("messages").innerHTML = "";
-    document.getElementById("messageInput").value = "";
-    return;
-  }
-
-  // Normal mesaj gönder
-  db.ref("messages").push({
+  db.ref(`groups/${currentGroup}/messages`).push({
     user: username,
     text: msg
   });
-
   document.getElementById("messageInput").value = "";
 }
 
-// Yeni mesaj eklendiğinde göster
-db.ref("messages").on("child_added", (snapshot) => {
-  const data = snapshot.val();
-  const msgDiv = document.createElement("div");
+function loadMessages() {
+  const msgBox = document.getElementById("messages");
+  msgBox.innerHTML = "";
 
-  const urlPattern = /(https?:\/\/[^\s]+)/g;
-  const match = data.text.match(urlPattern);
+  db.ref(`groups/${currentGroup}/messages`).on("child_added", (snap) => {
+    const data = snap.val();
+    const msgDiv = document.createElement("div");
 
-  if (match) {
-    // Link içeren mesaj
-    const link = match[0];
-    msgDiv.innerHTML = `
-      <strong>${data.user}:</strong> ${data.text}
-      <br>
-      <button style="margin-top:5px; padding:4px 10px; cursor:pointer;" onclick="window.open('${link}', '_blank')">🔗 Aç</button>
-    `;
-  } else {
-    // Normal mesaj
-    msgDiv.textContent = `${data.user}: ${data.text}`;
-  }
+    // Link kontrolü
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    const match = data.text.match(urlPattern);
+    if (match) {
+      const link = match[0];
+      msgDiv.innerHTML = `<strong>${data.user}:</strong> ${data.text}
+      <br><button onclick="window.open('${link}', '_blank')">🔗 Aç</button>`;
+    } else {
+      msgDiv.textContent = `${data.user}: ${data.text}`;
+    }
 
-  document.getElementById("messages").appendChild(msgDiv);
-  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-});
-
-// Mesajlar tamamen silindiğinde ekranı da temizle
-db.ref("messages").on("value", (snapshot) => {
-  if (!snapshot.exists()) {
-    document.getElementById("messages").innerHTML = "";
-  }
-});
+    msgBox.appendChild(msgDiv);
+    msgBox.scrollTop = msgBox.scrollHeight;
+  });
+}
