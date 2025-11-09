@@ -48,16 +48,24 @@ db.ref("messages").on("child_added", (snapshot) => {
   const data = snapshot.val();
   const msgDiv = document.createElement("div");
 
-  // Link içeriyorsa tespit et
   const urlPattern = /(https?:\/\/[^\s]+)/g;
-  if (urlPattern.test(data.text)) {
-    const link = data.text.match(urlPattern)[0];
-    msgDiv.innerHTML = `${data.user}: ${data.text} <br><button onclick="window.open('${link}', '_blank')">Aç</button>`;
+  const match = data.text.match(urlPattern);
+
+  if (match) {
+    // Link içeren mesaj
+    const link = match[0];
+    msgDiv.innerHTML = `
+      <strong>${data.user}:</strong> ${data.text}
+      <br>
+      <button style="margin-top:5px; padding:4px 10px; cursor:pointer;" onclick="window.open('${link}', '_blank')">🔗 Aç</button>
+    `;
   } else {
+    // Normal mesaj
     msgDiv.textContent = `${data.user}: ${data.text}`;
   }
 
   document.getElementById("messages").appendChild(msgDiv);
+  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
 });
 
 // Mesajlar tamamen silindiğinde ekranı da temizle
