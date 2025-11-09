@@ -23,16 +23,11 @@ function login() {
 
   db.ref("users/" + user).once("value", (snap) => {
     if (snap.exists()) {
-      const data = snap.val();
-      if (data.password === pass) {
+      if (snap.val().password === pass) {
         username = user;
         showGroupScreen();
-      } else {
-        alert("Yanlış şifre!");
-      }
-    } else {
-      alert("Böyle bir kullanıcı yok!");
-    }
+      } else alert("Yanlış şifre!");
+    } else alert("Kullanıcı bulunamadı!");
   });
 }
 
@@ -42,9 +37,8 @@ function register() {
   if (!user || !pass) return alert("Tüm alanları doldur!");
 
   db.ref("users/" + user).once("value", (snap) => {
-    if (snap.exists()) {
-      alert("Bu kullanıcı zaten var!");
-    } else {
+    if (snap.exists()) alert("Bu kullanıcı zaten var!");
+    else {
       db.ref("users/" + user).set({ password: pass });
       alert("Kayıt başarılı! Giriş yapabilirsin.");
     }
@@ -53,6 +47,7 @@ function register() {
 
 function logout() {
   username = "";
+  currentGroup = "";
   document.getElementById("login-screen").style.display = "block";
   document.getElementById("group-screen").style.display = "none";
   document.getElementById("chat-screen").style.display = "none";
@@ -68,45 +63,69 @@ function showGroupScreen() {
 function loadGroups() {
   const listDiv = document.getElementById("group-list");
   listDiv.innerHTML = "";
+
   db.ref("groups").once("value", (snap) => {
     snap.forEach((child) => {
       const groupName = child.key;
-      const btn = document.createElement("button");
-      btn.textContent = groupName;
-      btn.onclick = () => enterGroup(groupName);
-      listDiv.appendChild(btn);
+      const members = child.val().members || {};
+      if (members[username]) {
+        const btn = document.createElement("button");
+        btn.textContent = groupName;
+        btn.onclick = () => enterGroup(groupName);
+        listDiv.appendChild(btn);
+      }
     });
   });
 }
 
 function createGroup() {
   const name = document.getElementById("newGroupName").value.trim();
+  const memberStr = document.getElementById("memberNames").value.trim();
   if (!name) return alert("Grup adı gir!");
+  if (!memberStr) return alert("Üyeleri gir! (virgülle ayır)");
+
+  const membersArray = memberStr.split(",").map(m => m.trim()).filter(Boolean);
+  const membersObj = {};
+  membersArray.forEach(m => membersObj[m] = true);
+  membersObj[username] = true; // kurucu da üye
+
   db.ref("groups/" + name).set({
-    members: { [username]: true },
+    members: membersObj
   });
+
   document.getElementById("newGroupName").value = "";
+  document.getElementById("memberNames").value = "";
+  alert("Grup oluşturuldu!");
   loadGroups();
 }
 
-function enterGroup(groupName) {
-  currentGroup = groupName;
-  document.getElementById("group-title").textContent = "Grup: " + groupName;
+function enterGroup(name) {
+  currentGroup = name;
   document.getElementById("group-screen").style.display = "none";
   document.getElementById("chat-screen").style.display = "block";
+  document.getElementById("group-title").textContent = "Grup: " + name;
   loadMessages();
 }
 
 function backToGroups() {
   document.getElementById("chat-screen").style.display = "none";
   document.getElementById("group-screen").style.display = "block";
-  db.ref("groups/" + currentGroup + "/messages").off(); // dinlemeyi kapat
+  db.ref("groups/" + currentGroup + "/messages").off();
 }
 
 // --- MESAJLAR ---
 function sendMessage() {
   const msg = document.getElementById("messageInput").value.trim();
   if (msg === "") return;
+
+  // Eğer Eymen "clear" yazdıysa sadece bu grubun mesajlarını sil
+  if (username.toLowerCase() === "eymen" && msg.toLowerCase() === "clear") {
+    db.ref(`groups/${currentGroup}/messages`).remove();
+    document.getElementById("messages").innerHTML = "";
+    document.getElementById("messageInput").value = "";
+    return;
+  }
+
   db.ref(`groups/${currentGroup}/messages`).push({
     user: username,
     text: msg
@@ -115,8 +134,8 @@ function sendMessage() {
 }
 
 function loadMessages() {
-  const msgBox = document.getElementById("messages");
-  msgBox.innerHTML = "";
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
 
   db.ref(`groups/${currentGroup}/messages`).on("child_added", (snap) => {
     const data = snap.val();
@@ -133,7 +152,7 @@ function loadMessages() {
       msgDiv.textContent = `${data.user}: ${data.text}`;
     }
 
-    msgBox.appendChild(msgDiv);
-    msgBox.scrollTop = msgBox.scrollHeight;
+    box.appendChild(msgDiv);
+    box.scrollTop = box.scrollHeight;
   });
 }
