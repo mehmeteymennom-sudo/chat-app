@@ -3,21 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Basit Sohbet</title>
+  <title>Grup Sohbet</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- GİRİŞ / KAYIT EKRANI -->
   <div id="login-screen">
-    <h2>Kullanıcı Adı Gir</h2>
-    <input id="username" placeholder="Kullanıcı adın" />
+    <h2>Giriş / Kayıt</h2>
+    <input id="username" placeholder="Kullanıcı adı" /><br />
+    <input id="password" type="password" placeholder="Şifre" /><br />
     <button onclick="login()">Giriş Yap</button>
+    <button onclick="register()">Kayıt Ol</button>
   </div>
 
+  <!-- GRUP SEÇME EKRANI -->
+  <div id="group-screen" style="display:none;">
+    <h2>Grup Seç veya Kur</h2>
+    <div id="group-list"></div>
+    <input id="newGroupName" placeholder="Yeni grup adı" />
+    <button onclick="createGroup()">Grup Kur</button><br />
+    <button onclick="logout()">Çıkış Yap</button>
+  </div>
+
+  <!-- SOHBET EKRANI -->
   <div id="chat-screen" style="display:none;">
-    <h2>Canlı Sohbet</h2>
+    <h2 id="group-title"></h2>
     <div id="messages"></div>
     <input id="messageInput" placeholder="Mesaj yaz..." />
-    <button onclick="sendMessage()">Gönder</button>
+    <button onclick="sendMessage()">Gönder</button><br />
+    <button onclick="backToGroups()">⬅️ Gruplara Dön</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
