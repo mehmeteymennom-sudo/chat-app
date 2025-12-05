@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- GİRİŞ / KAYIT -->
+  <!-- (sizin HTML aynı kalıyor) -->
   <div id="login-screen">
     <h2>Giriş / Kayıt</h2>
     <input id="username" placeholder="Kullanıcı adı" /><br />
@@ -16,7 +16,6 @@
     <button onclick="register()">Kayıt Ol</button>
   </div>
 
-  <!-- GRUP SEÇME -->
   <div id="group-screen" style="display:none;">
     <h2>Gruplarım</h2>
     <div id="group-list"></div>
@@ -27,7 +26,6 @@
     <button onclick="logout()">Çıkış Yap</button>
   </div>
 
-  <!-- SOHBET -->
   <div id="chat-screen" style="display:none;">
     <h2 id="group-title"></h2>
     <div id="messages"></div>
@@ -36,8 +34,11 @@
     <button onclick="backToGroups()">⬅️ Gruplara Dön</button>
   </div>
 
+  <!-- Firebase scriptleri -> önce firebase, sonra auth, sonra database, sonra bizim script -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
   <script src="script.js"></script>
 </body>
 </html>
